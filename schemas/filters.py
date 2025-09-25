@@ -47,15 +47,9 @@ class FilterResponseSchema(FilterCreateSchema):
     model_config = {"from_attributes": True}
 
 
-class ConditionUpdateSchema(BaseModel):
-    field: Optional[str] = None
-    operator: Optional[Operator] = None
-    value: Optional[Any] = None
-
-
 class FilterUpdateSchema(BaseModel):
     name: Optional[str] = None
-    conditions: Optional[list[ConditionUpdateSchema]] = None
+    conditions: Optional[list[ConditionSchema]] = None
     logical_operator: Optional[LogicalOperator] = None
 
     model_config = {"from_attributes": True}

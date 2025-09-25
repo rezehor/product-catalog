@@ -51,11 +51,11 @@ async def get_filtered_products(
             for product in products
         ],
         prev_page=(
-            f"/products/?page={page - 1}&per_page={per_page}"
+            f"/search/?page={page - 1}&per_page={per_page}"
             if page > 1 else None
         ),
         next_page=(
-            f"/products/?page={page + 1}&per_page={per_page}"
+            f"/search/?page={page + 1}&per_page={per_page}"
             if page < total_pages
             else None
         ),
