@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from fastapi import APIRouter, HTTPException, Query, status
 from filter_builder import build_query
 from models.filters import Filter
@@ -45,17 +47,19 @@ async def get_filtered_products(
 
     total_pages = (total_items + per_page - 1) // per_page
 
+    base_url = f"/search/{quote(filter_name)}"
+
     response = ProductListResponseSchema(
         products=[
             ProductResponseSchema(**product.model_dump())
             for product in products
         ],
         prev_page=(
-            f"/search/?page={page - 1}&per_page={per_page}"
+            f"{base_url}?page={page - 1}&per_page={per_page}"
             if page > 1 else None
         ),
         next_page=(
-            f"/search/?page={page + 1}&per_page={per_page}"
+            f"{base_url}?page={page + 1}&per_page={per_page}"
             if page < total_pages
             else None
         ),
