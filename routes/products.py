@@ -53,7 +53,7 @@ async def get_all_products(
 
 
 @router.get(
-    "/{product_id}",
+    "/{product_id}/",
     response_model=ProductResponseSchema,
     summary="Get a single product by ID",
     description="Retrieves detailed information for a specific product"

@@ -1,8 +1,6 @@
-from typing import Any, Optional
-
+from typing import Any
 from beanie import Document, PydanticObjectId, Indexed
 from pydantic import Field
-
 from schemas.filters import LogicalOperator
 
 

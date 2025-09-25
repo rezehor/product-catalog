@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List, Optional
 from beanie import PydanticObjectId
 from pydantic import BaseModel, condecimal, constr
@@ -16,7 +17,7 @@ class ProductCreateSchema(BaseModel):
 class ProductResponseSchema(BaseModel):
     id: PydanticObjectId
     name: str
-    price: condecimal(ge=0, max_digits=10, decimal_places=2)
+    price: Decimal
 
     model_config = {
         "from_attributes": True,
@@ -42,4 +43,3 @@ class ProductUpdateSchema(BaseModel):
         "from_attributes": True,
         "extra": "allow"
     }
-

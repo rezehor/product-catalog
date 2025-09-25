@@ -1,7 +1,11 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status
 from models.filters import Filter
-from schemas.filters import FilterCreateSchema, FilterResponseSchema, FilterUpdateSchema
+from schemas.filters import (
+    FilterCreateSchema,
+    FilterResponseSchema,
+    FilterUpdateSchema
+)
 
 
 router = APIRouter()
@@ -15,7 +19,9 @@ async def get_filter_or_404(name: str) -> Filter:
 
 
 @router.post("/", response_model=FilterResponseSchema)
-async def create_filter(filter_data: FilterCreateSchema) -> FilterResponseSchema:
+async def create_filter(
+        filter_data: FilterCreateSchema
+) -> FilterResponseSchema:
     existing_filter = await Filter.find_one(Filter.name == filter_data.name)
     if existing_filter:
         raise HTTPException(
@@ -56,7 +62,10 @@ async def get_filter(filter_name: str) -> FilterResponseSchema:
     summary="Update a filter",
     description="Updates a filter.",
 )
-async def update_filter(filter_name: str, update_data: FilterUpdateSchema):
+async def update_filter(
+        filter_name: str,
+        update_data: FilterUpdateSchema
+) -> FilterResponseSchema:
     filter_ = await get_filter_or_404(filter_name)
 
     updates = update_data.model_dump(exclude_unset=True)
@@ -76,6 +85,6 @@ async def update_filter(filter_name: str, update_data: FilterUpdateSchema):
     summary="Delete a single filter.",
     description="Deletes a single filter by name.",
 )
-async def delete_filter(filter_name: str):
+async def delete_filter(filter_name: str) -> None:
     filter_ = await get_filter_or_404(filter_name)
     await filter_.delete()

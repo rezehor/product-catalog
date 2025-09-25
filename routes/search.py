@@ -17,7 +17,9 @@ router = APIRouter()
 async def get_filtered_products(
         filter_name: str,
         page: int = Query(1, ge=1, description="Page number"),
-        per_page: int = Query(10, ge=1, le=20, description="Number of products per page")
+        per_page: int = Query(
+            10, ge=1, le=20, description="Number of products per page"
+        )
 ) -> ProductListResponseSchema:
     filter_ = await Filter.find_one(Filter.name == filter_name)
     if not filter_:
@@ -25,7 +27,6 @@ async def get_filtered_products(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Filter with the name '{filter_name}' was not found."
         )
-
 
     filter_data = FilterResponseSchema.model_validate(filter_)
 
@@ -45,8 +46,14 @@ async def get_filtered_products(
     total_pages = (total_items + per_page - 1) // per_page
 
     response = ProductListResponseSchema(
-        products=[ProductResponseSchema(**product.model_dump()) for product in products],
-        prev_page=f"/products/?page={page - 1}&per_page={per_page}" if page > 1 else None,
+        products=[
+            ProductResponseSchema(**product.model_dump())
+            for product in products
+        ],
+        prev_page=(
+            f"/products/?page={page - 1}&per_page={per_page}"
+            if page > 1 else None
+        ),
         next_page=(
             f"/products/?page={page + 1}&per_page={per_page}"
             if page < total_pages
