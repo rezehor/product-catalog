@@ -1,6 +1,6 @@
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Path
 from filter_builder import build_query
 from models.filters import Filter
 from models.products import Product
@@ -13,11 +13,18 @@ router = APIRouter()
 @router.get(
     "/{filter_name}/",
     response_model=ProductListResponseSchema,
-    summary="Get filtered products",
-    description="Get all products filtered by filter_name",
+    summary="Retrieve products by filter",
+    description=(
+            "Returns a paginated list of products that match the specified filter. "
+            "If the filter does not exist, returns HTTP 404 Not Found. "
+            "Supports pagination via `page` and `per_page` query parameters."
+    ),
 )
 async def get_filtered_products(
-        filter_name: str,
+        filter_name: str = Path(
+            description="The name of the filter to apply. "
+                        "Must match an existing filter in the system."
+        ),
         page: int = Query(1, ge=1, description="Page number"),
         per_page: int = Query(
             10, ge=1, le=20, description="Number of products per page"

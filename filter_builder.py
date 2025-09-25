@@ -3,7 +3,17 @@ from schemas.filters import Operator, LogicalOperator, FilterResponseSchema
 
 def build_query(filter_data: FilterResponseSchema):
     """
-    Utility function to convert FilterResponseSchema into a MongoDB query dictionary.
+    Convert a FilterResponseSchema into a MongoDB query dictionary.
+
+    Builds a query by translating each condition's operator into the
+    corresponding MongoDB filter. Combines all conditions using the
+    filter's logical operator (AND / OR).
+
+    Parameters:
+        filter_data (FilterResponseSchema): Filter containing conditions and logical operator.
+
+    Returns:
+        dict: MongoDB-compatible query dictionary.
     """
 
     filter_conditions = []

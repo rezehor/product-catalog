@@ -18,7 +18,16 @@ async def get_filter_or_404(name: str) -> Filter:
     return filter_
 
 
-@router.post("/", response_model=FilterResponseSchema)
+@router.post(
+    "/",
+    response_model=FilterResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new filter",
+    description=(
+            "Creates a new filter in the system. "
+            "If a filter with the same name already exists, returns HTTP 409 Conflict."
+    ),
+)
 async def create_filter(
         filter_data: FilterCreateSchema
 ) -> FilterResponseSchema:
@@ -37,8 +46,8 @@ async def create_filter(
 @router.get(
     "/",
     response_model=List[FilterResponseSchema],
-    summary="List filters",
-    description="Retrieves all filters.",
+    summary="Retrieve all filters",
+    description="Returns a list of all filters currently stored in the system.",
 )
 async def get_all_filters() -> List[FilterResponseSchema]:
     filters = await Filter.find_all().to_list()
@@ -48,8 +57,11 @@ async def get_all_filters() -> List[FilterResponseSchema]:
 @router.get(
     "/{filter_name}/",
     response_model=FilterResponseSchema,
-    summary="Get a filter",
-    description="Retrieves a filter by name.",
+    summary="Retrieve a single filter by name",
+    description=(
+            "Fetches the filter with the specified name. "
+            "If the filter does not exist, returns HTTP 404 Not Found."
+    ),
 )
 async def get_filter(filter_name: str) -> FilterResponseSchema:
     filter_ = await get_filter_or_404(filter_name)
@@ -59,8 +71,11 @@ async def get_filter(filter_name: str) -> FilterResponseSchema:
 @router.patch(
     "/{filter_name}/",
     response_model=FilterResponseSchema,
-    summary="Update a filter",
-    description="Updates a filter.",
+    summary="Update an existing filter",
+    description=(
+            "Updates an existing filter. Only the fields provided in the request "
+            "will be updated. If no valid fields are supplied, returns HTTP 400 Bad Request."
+    ),
 )
 async def update_filter(
         filter_name: str,
@@ -82,8 +97,12 @@ async def update_filter(
 @router.delete(
     "/{filter_name}/",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a single filter.",
-    description="Deletes a single filter by name.",
+    summary="Delete a filter",
+    description=(
+            "Deletes the filter with the specified name from the system. "
+            "Returns HTTP 204 No Content if the deletion is successful. "
+            "If the filter does not exist, returns HTTP 404 Not Found."
+    ),
 )
 async def delete_filter(filter_name: str) -> None:
     filter_ = await get_filter_or_404(filter_name)

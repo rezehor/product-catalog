@@ -10,6 +10,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE_PATH, extra="ignore")
 
     MONGODB_URI: str
-    MONGODB_DB_NAME: str = "product_catalog"
+    MONGODB_DB_NAME: str
 
 settings = Settings()

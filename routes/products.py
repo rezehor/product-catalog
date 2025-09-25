@@ -16,8 +16,12 @@ async def get_product_or_404(product_id: PydanticObjectId) -> Product:
 @router.get(
     "/",
     response_model=ProductListResponseSchema,
-    summary="List products",
-    description="Retrieves a paginated list of products.",
+    summary="Retrieve a paginated list of products",
+    description=(
+            "Returns a paginated list of all products in the system. "
+            "Supports page number and page size via query parameters. "
+            "If no products are found, returns HTTP 404 Not Found."
+    ),
 )
 async def get_all_products(
     page: int = Query(1, ge=1, description="Page number"),
@@ -55,8 +59,11 @@ async def get_all_products(
 @router.get(
     "/{product_id}/",
     response_model=ProductResponseSchema,
-    summary="Get a single product by ID",
-    description="Retrieves detailed information for a specific product"
+    summary="Retrieve a single product by ID",
+    description=(
+            "Fetches detailed information about a single product identified by its ID. "
+            "If the product does not exist, returns HTTP 404 Not Found."
+    ),
 )
 async def get_product(product_id: PydanticObjectId) -> ProductResponseSchema:
     product = await get_product_or_404(product_id)
@@ -67,8 +74,11 @@ async def get_product(product_id: PydanticObjectId) -> ProductResponseSchema:
     "/",
     response_model=ProductResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new product.",
-    description="Allows all users to add a new product to the database.",
+    summary="Create a new product",
+    description=(
+            "Creates a new product in the system. "
+            "If a product with the same name already exists, returns HTTP 409 Conflict."
+    ),
 )
 async def create_product(product_data: ProductCreateSchema) -> ProductResponseSchema:
     existing = await Product.find_one(Product.name == product_data.name)
@@ -91,8 +101,11 @@ async def create_product(product_data: ProductCreateSchema) -> ProductResponseSc
     "/{product_id}/",
     response_model=ProductResponseSchema,
     status_code=status.HTTP_200_OK,
-    summary="Update a single product.",
-    description="Allows all users to update a single product to the database.",
+    summary="Update an existing product",
+    description=(
+            "Updates an existing product. Only fields provided in the request will be updated. "
+            "If no valid fields are supplied, returns HTTP 400 Bad Request."
+    ),
 )
 async def update_product(
     product_id: PydanticObjectId,
@@ -114,8 +127,12 @@ async def update_product(
 @router.delete(
     "/{product_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a single product.",
-    description="Allows all users to delete a single product to the database.",
+    summary="Delete a product",
+    description=(
+            "Deletes a product identified by its ID from the system. "
+            "Returns HTTP 204 No Content if deletion succeeds, "
+            "or HTTP 404 Not Found if the product does not exist."
+    ),
 )
 async def delete_product(product_id: PydanticObjectId):
     product = await get_product_or_404(product_id)
