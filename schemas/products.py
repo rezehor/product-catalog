@@ -13,6 +13,20 @@ class ProductCreateSchema(BaseModel):
     }
 
 
+class ProductListCreateSchema(BaseModel):
+    products: List[ProductCreateSchema]
+
+    @field_validator("products")
+    @classmethod
+    def validate_product(cls, products):
+        names = [p.name for p in products]
+        duplicates = {name for name in names if names.count(name) > 1}
+        if duplicates:
+            raise ValueError(f"Duplicate product names in request: {list(duplicates)}")
+        return products
+
+
+
 class ProductResponseSchema(BaseModel):
     id: PydanticObjectId
     name: str
