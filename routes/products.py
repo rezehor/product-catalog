@@ -112,15 +112,27 @@ async def update_product(
     update_data: ProductUpdateSchema
 ) -> ProductResponseSchema:
     product = await get_product_or_404(product_id)
-
     updates = update_data.model_dump(exclude_unset=True)
-    if not updates:
+
+    safe_updates = {}
+    for key, value in updates.items():
+        if hasattr(product, key):
+            current_value = getattr(product, key)
+            if value is None or isinstance(value, type(current_value)):
+                safe_updates[key] = value
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Field '{key}' must be of type {type(current_value).__name__}"
+                )
+
+    if not safe_updates:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="No valid fields to update."
         )
 
-    await product.update({"$set": updates})
+    await product.update({"$set": safe_updates})
     return ProductResponseSchema(**product.model_dump())
 
 

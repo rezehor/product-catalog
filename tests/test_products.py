@@ -11,7 +11,7 @@ async def test_create_product(client: AsyncClient):
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Laptop"
-    assert float(data["price"]) == 1500.50
+    assert data["price"] == 1500.50
     assert "id" in data
 
 
@@ -52,7 +52,7 @@ async def test_get_product_by_id(client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Mouse"
-    assert float(data["price"]) == 49.99
+    assert data["price"] == 49.99
 
 
 @pytest.mark.asyncio
@@ -67,7 +67,7 @@ async def test_update_product(client: AsyncClient):
     )
     assert response.status_code == 200
     data = response.json()
-    assert float(data["price"]) == 100.00
+    assert data["price"] == 100.00
 
 
 @pytest.mark.asyncio

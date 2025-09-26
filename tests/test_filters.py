@@ -12,7 +12,7 @@ async def test_create_filter(client: AsyncClient):
         "logical_operator": "AND"
     }
     response = await client.post("/filters/", json=data)
-    assert response.status_code == 200
+    assert response.status_code == 201
     res_data = response.json()
     assert res_data["name"] == "PriceFilter"
     assert len(res_data["conditions"]) == 1

@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from beanie import PydanticObjectId
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from enum import Enum
 
 
@@ -21,13 +21,13 @@ class LogicalOperator(str, Enum):
 
 
 class ConditionSchema(BaseModel):
-    field: str
+    field: str = Field(min_length=1, max_length=100)
     operator: Operator
     value: Any
 
 
 class FilterCreateSchema(BaseModel):
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     conditions: list[ConditionSchema]
     logical_operator: LogicalOperator = LogicalOperator.AND
 
@@ -51,5 +51,12 @@ class FilterUpdateSchema(BaseModel):
     name: Optional[str] = None
     conditions: Optional[list[ConditionSchema]] = None
     logical_operator: Optional[LogicalOperator] = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value):
+        if value is not None and value.strip() == "":
+            raise ValueError("Name must have at least 1 character")
+        return value
 
     model_config = {"from_attributes": True}
