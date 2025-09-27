@@ -7,10 +7,7 @@ class ProductCreateSchema(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     price: condecimal(ge=0, max_digits=10, decimal_places=2)
 
-    model_config = {
-        "from_attributes": True,
-        "extra": "allow"
-    }
+    model_config = {"from_attributes": True, "extra": "allow"}
 
 
 class ProductListCreateSchema(BaseModel):
@@ -26,16 +23,12 @@ class ProductListCreateSchema(BaseModel):
         return products
 
 
-
 class ProductResponseSchema(BaseModel):
     id: PydanticObjectId
     name: str
     price: float
 
-    model_config = {
-        "from_attributes": True,
-        "extra": "allow"
-    }
+    model_config = {"from_attributes": True, "extra": "allow"}
 
 
 class ProductListResponseSchema(BaseModel):
@@ -59,7 +52,4 @@ class ProductUpdateSchema(BaseModel):
             raise ValueError("Name must have at least 1 character")
         return value
 
-    model_config = {
-        "from_attributes": True,
-        "extra": "allow"
-    }
+    model_config = {"from_attributes": True, "extra": "allow"}

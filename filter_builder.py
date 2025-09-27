@@ -1,47 +1,50 @@
-from schemas.filters import Operator, LogicalOperator, FilterResponseSchema
+from typing import Any
+from schemas.filters import Operator, LogicalOperator, FilterCreateSchema
 
 
-def build_query(filter_data: FilterResponseSchema):
+def build_query(filter_data: FilterCreateSchema) -> dict:
     """
-    Convert a FilterResponseSchema into a MongoDB query dictionary.
+    Convert a FilterCreateSchema into a MongoDB query dictionary.
 
-    Builds a query by translating each condition's operator into the
-    corresponding MongoDB filter. Combines all conditions using the
-    filter's logical operator (AND / OR).
+    Each group of conditions is combined with its own
+    logical operator (AND/OR),and all groups are joined
+    by the filter's top-level logical operator.
 
-    Parameters:
-        filter_data (FilterResponseSchema): Filter containing conditions and logical operator.
+    Args:
+        filter_data (FilterCreateSchema): The filter definition.
 
     Returns:
-        dict: MongoDB-compatible query dictionary.
+        dict: MongoDB query dictionary compatible with .find().
     """
 
-    filter_conditions = []
+    def condition_to_query(field: str, operator: Operator, value: Any) -> dict:
+        operator_map = {
+            Operator.EQ: lambda val: {field: val},
+            Operator.NEQ: lambda val: {field: {"$ne": val}},
+            Operator.GT: lambda val: {field: {"$gt": val}},
+            Operator.GTE: lambda val: {field: {"$gte": val}},
+            Operator.LT: lambda val: {field: {"$lt": val}},
+            Operator.LTE: lambda val: {field: {"$lte": val}},
+            Operator.INCLUDE: lambda val: {
+                field: {"$in": val if isinstance(val, list) else [val]}
+            },
+            Operator.REGEX: lambda val: {
+                field: {"$regex": val, "$options": "i"}
+            },
+        }
+        return operator_map[operator](value)
 
-    for cond in filter_data.conditions:
-        field, op, value = cond.field, cond.operator, cond.value
+    groups = []
+    for group in filter_data.conditions:
+        sub_queries = [
+            condition_to_query(cond.field, cond.operator, cond.value)
+            for cond in group.conditions
+        ]
+        if group.logical_operator == LogicalOperator.AND:
+            groups.append({"$and": sub_queries})
+        else:
+            groups.append({"$or": sub_queries})
 
-        if op == Operator.EQ:
-            filter_conditions.append({field: value})
-        elif op == Operator.NEQ:
-            filter_conditions.append({field: {"$ne": value}})
-        elif op == Operator.GT:
-            filter_conditions.append({field: {"$gt": value}})
-        elif op == Operator.GTE:
-            filter_conditions.append({field: {"$gte": value}})
-        elif op == Operator.LT:
-            filter_conditions.append({field: {"$lt": value}})
-        elif op == Operator.LTE:
-            filter_conditions.append({field: {"$lte": value}})
-        elif op == Operator.INCLUDE:
-            filter_conditions.append(
-                {field: {"$in": value if isinstance(value, list) else [value]}}
-            )
-        elif op == Operator.REGEX:
-            filter_conditions.append({field: {"$regex": value, "$options": "i"}})
-
-    return (
-        {"$and": filter_conditions}
-        if filter_data.logical_operator == LogicalOperator.AND
-        else {"$or": filter_conditions}
-    )
+    return {"$and": groups} \
+        if filter_data.logical_operator == LogicalOperator.AND \
+        else {"$or": groups}
