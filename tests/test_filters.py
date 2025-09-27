@@ -3,100 +3,137 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_filter(client: AsyncClient):
-    data = {
-        "name": "PriceFilter",
-        "conditions": [
-            {"field": "price", "operator": ">", "value": 100}
-        ],
-        "logical_operator": "AND"
-    }
-    response = await client.post("/filters/", json=data)
-    assert response.status_code == 201
+async def test_create_filter(client: AsyncClient, filter_one_template):
+    """
+    Test creating a new filter with valid conditions.
+    """
+
+    response = await client.post("/filters/", json=filter_one_template)
+    assert response.status_code == 201, f"Expected 201, got {response.status_code}"
+
     res_data = response.json()
-    assert res_data["name"] == "PriceFilter"
-    assert len(res_data["conditions"]) == 1
-    assert res_data["logical_operator"] == "AND"
+    assert res_data["name"] == "Filter1", "Filter name mismatch."
+    assert len(res_data["conditions"]) == 2, "Expected one condition in the filter."
+    assert res_data["logical_operator"] == "OR", "Logical operator mismatch."
 
 
 @pytest.mark.asyncio
-async def test_create_duplicate_filter(client: AsyncClient):
-    data = {
-        "name": "DuplicateFilter",
-        "conditions": [
-            {"field": "price", "operator": ">", "value": 50}
-        ]
-    }
+async def test_create_duplicate_filter(client: AsyncClient, filter_one_template):
+    """
+    Test creating a filter with a duplicate name.
+    """
 
-    await client.post("/filters/", json=data)
-    response = await client.post("/filters/", json=data)
-    assert response.status_code == 409
+    await client.post("/filters/", json=filter_one_template)
+    response = await client.post("/filters/", json=filter_one_template)
+
+    assert response.status_code == 409, f"Expected 409, got {response.status_code}"
 
 
 @pytest.mark.asyncio
-async def test_get_all_filters(client: AsyncClient):
-
-    await client.post("/filters/", json={
-        "name": "Filter1",
-        "conditions": [{"field": "price", "operator": ">", "value": 10}]
-    })
-    await client.post("/filters/", json={
-        "name": "Filter2",
-        "conditions": [{"field": "price", "operator": "<", "value": 100}]
-    })
+async def test_get_all_filters(
+    client: AsyncClient, filter_one_template, filter_two_template
+):
+    """
+    Test retrieving all filters.
+    """
+    await client.post("/filters/", json=filter_one_template)
+    await client.post("/filters/", json=filter_two_template)
 
     response = await client.get("/filters/")
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
     filters = response.json()
-    assert len(filters) >= 2
-    names = [filter_["name"] for filter_ in filters]
-    assert "Filter1" in names and "Filter2" in names
+    assert len(filters) >= 2, "Expected at least 2 filters in the list."
+
+    names = [f["name"] for f in filters]
+    assert "Filter1" in names, "Filter1 not found in response."
+    assert "Filter2" in names, "Filter2 Two not found in response."
 
 
 @pytest.mark.asyncio
-async def test_get_filter_by_name(client: AsyncClient):
-    await client.post("/filters/", json={
-        "name": "SpecialFilter",
-        "conditions": [{"field": "name", "operator": "==", "value": "Phone"}]
-    })
-    response = await client.get("/filters/SpecialFilter/")
-    assert response.status_code == 200
+async def test_get_filter_by_name(client: AsyncClient, filter_one_template):
+    """
+    Test retrieving a filter by its name.
+    """
+    await client.post("/filters/", json=filter_one_template)
+
+    response = await client.get("/filters/Filter1/")
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
     filter_ = response.json()
-    assert filter_["name"] == "SpecialFilter"
+    assert filter_["name"] == "Filter1", "Filter name mismatch."
 
 
 @pytest.mark.asyncio
-async def test_update_filter(client: AsyncClient):
-    await client.post("/filters/", json={
-        "name": "UpdateFilter",
-        "conditions": [{"field": "price", "operator": ">", "value": 100}]
-    })
+async def test_update_filter(client: AsyncClient, filter_one_template):
+    """
+    Test updating an existing filter.
+    """
+    await client.post("/filters/", json=filter_one_template)
+
     update_data = {
-        "logical_operator": "OR",
-        "conditions": [{"field": "price", "operator": ">=", "value": 150}]
+        "conditions": [
+            {
+                "logical_operator": "OR",
+                "conditions": [
+                    {"field": "test1", "operator": "<", "value": 50},
+                    {"field": "test2", "operator": "<=", "value": 100},
+                ],
+            },
+            {
+                "logical_operator": "OR",
+                "conditions": [
+                    {"field": "test3", "operator": "regex", "value": "3"},
+                    {"field": "test4", "operator": ">=", "value": 200},
+                ],
+            },
+        ],
     }
-    response = await client.patch("/filters/UpdateFilter/", json=update_data)
-    assert response.status_code == 200
+    response = await client.patch("/filters/Filter1/", json=update_data)
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
     data = response.json()
-    assert data["logical_operator"] == "OR"
-    assert data["conditions"][0]["operator"] == ">="
+    assert (
+        data["conditions"][0]["conditions"][0]["operator"] == "<"
+    ), "Condition operator mismatch."
+    assert (
+        data["conditions"][0]["conditions"][0]["value"] == 50
+    ), "Value was not updated."
+    assert (
+        data["conditions"][0]["conditions"][1]["operator"] == "<="
+    ), "Condition operator mismatch."
+    assert (
+        data["conditions"][1]["conditions"][0]["operator"] == "regex"
+    ), "Condition operator mismatch."
+    assert (
+        data["conditions"][1]["logical_operator"] == "OR"
+    ), "Logical operator was not updated."
 
 
 @pytest.mark.asyncio
-async def test_delete_filter(client: AsyncClient):
-    await client.post("/filters/", json={
-        "name": "DeleteFilter",
-        "conditions": [{"field": "price", "operator": ">", "value": 50}]
-    })
-    response = await client.delete("/filters/DeleteFilter/")
-    assert response.status_code == 204
+async def test_delete_filter(client: AsyncClient, filter_one_template):
+    """
+    Test deleting a filter by name.
+    """
+    await client.post("/filters/", json=filter_one_template)
 
-    response = await client.get("/filters/DeleteFilter/")
-    assert response.status_code == 404
+    response = await client.delete("/filters/Filter1/")
+    assert response.status_code == 204, f"Expected 204, got {response.status_code}"
+
+    response = await client.get("/filters/Filter1/")
+    assert response.status_code == 404, "Deleted filter should not be retrievable."
 
 
 @pytest.mark.asyncio
 async def test_filter_validation_empty_conditions(client: AsyncClient):
-    data = {"name": "InvalidFilter", "conditions": []}
+    """
+    Test creating a filter with empty conditions (should fail validation).
+    """
+    data = {
+        "name": "Filter1",
+        "logical_operator": "OR",
+        "conditions": [],
+    }
+
     response = await client.post("/filters/", json=data)
-    assert response.status_code == 422
+    assert response.status_code == 422, f"Expected 422, got {response.status_code}"

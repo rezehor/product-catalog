@@ -1,10 +1,9 @@
 from urllib.parse import quote
-
-from fastapi import APIRouter, HTTPException, Query, status, Path
+from fastapi import APIRouter, HTTPException, Query, Path
 from filter_builder import build_query
 from models.filters import Filter
 from models.products import Product
-from schemas.filters import FilterResponseSchema
+from schemas.filters import FilterCreateSchema
 from schemas.products import ProductListResponseSchema, ProductResponseSchema
 
 router = APIRouter()
@@ -15,29 +14,27 @@ router = APIRouter()
     response_model=ProductListResponseSchema,
     summary="Retrieve products by filter",
     description=(
-            "Returns a paginated list of products that match the specified filter. "
-            "If the filter does not exist, returns HTTP 404 Not Found. "
-            "Supports pagination via `page` and `per_page` query parameters."
+        "Returns a paginated list of products that match the specified filter. "
+        "If the filter does not exist, returns HTTP 404 Not Found. "
+        "Supports pagination via `page` and `per_page` query parameters."
     ),
 )
 async def get_filtered_products(
-        filter_name: str = Path(
-            description="The name of the filter to apply. "
-                        "Must match an existing filter in the system."
-        ),
-        page: int = Query(1, ge=1, description="Page number"),
-        per_page: int = Query(
-            10, ge=1, le=20, description="Number of products per page"
-        )
+    filter_name: str = Path(
+        description="The name of the filter to apply. "
+        "Must match an existing filter in the system."
+    ),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(10, ge=1, le=20, description="Number of products per page"),
 ) -> ProductListResponseSchema:
     filter_ = await Filter.find_one(Filter.name == filter_name)
     if not filter_:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Filter with the name '{filter_name}' was not found."
+            status_code=404,
+            detail=f"Filter with the name '{filter_name}' was not found.",
         )
 
-    filter_data = FilterResponseSchema.model_validate(filter_)
+    filter_data = FilterCreateSchema.model_validate(filter_)
 
     query = build_query(filter_data)
 
@@ -58,12 +55,10 @@ async def get_filtered_products(
 
     response = ProductListResponseSchema(
         products=[
-            ProductResponseSchema(**product.model_dump())
-            for product in products
+            ProductResponseSchema(**product.model_dump()) for product in products
         ],
         prev_page=(
-            f"{base_url}?page={page - 1}&per_page={per_page}"
-            if page > 1 else None
+            f"{base_url}?page={page - 1}&per_page={per_page}" if page > 1 else None
         ),
         next_page=(
             f"{base_url}?page={page + 1}&per_page={per_page}"
