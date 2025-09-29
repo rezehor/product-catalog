@@ -137,3 +137,33 @@ async def test_filter_validation_empty_conditions(client: AsyncClient):
 
     response = await client.post("/filters/", json=data)
     assert response.status_code == 422, f"Expected 422, got {response.status_code}"
+
+
+@pytest.mark.asyncio
+async def test_create_filter_with_default_operator(client: AsyncClient):
+    """
+    Test creating a filter without explicitly setting logical_operator
+    (should default to AND).
+    """
+    data = {
+        "name": "Filter",
+        "conditions": [
+            {
+                "conditions": [
+                    {"field": "test1", "operator": ">", "value": 100},
+                ]
+            }
+        ],
+    }
+
+    response = await client.post("/filters/", json=data)
+    assert response.status_code == 201, f"Expected 201, got {response.status_code}"
+
+    res_data = response.json()
+    assert res_data["name"] == "Filter", "Filter name mismatch."
+    assert (
+        res_data["logical_operator"] == "AND"
+    ), f"Expected default logical_operator 'AND', got {res_data['logical_operator']}"
+    assert (
+        res_data["conditions"][0]["conditions"][0]["field"] == "test1"
+    ), "Field mismatch."
