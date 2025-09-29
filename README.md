@@ -1,30 +1,16 @@
-# Product Catalog API Service 🛒
+# FastAPI Product Search With Filters Project
 
-## Description
-Product Catalog API Service is a web-based platform that allows users to manage and search products via saved filters. Built with FastAPI and MongoDB (Beanie + Motor), this system provides a scalable and extensible API for product and filter management. It supports CRUD operations for products and filters, as well as searching products using saved filters. The entire system is containerized with Docker for easy deployment.
+## A fully functional project written in Python showing how to build a FastAPI REST API with product filters and search!
 
-## Project Features
-- **📦 Product Management:**
-  - Create, read, update, and delete products
-  - Paginated product listing with configurable `page` and `per_page`
-  - Unique name validation to prevent duplicates
-- **🔖 Filter Management:**
-  - Create, read, update, and delete filters
-  - Each filter consists of multiple conditions with operators
-  - Supports complex logical operators (AND/OR)
-  - Filter engine designed for easy extension: adding new operators requires minimal changes
-- **🔍 Product Search via Filters:**
-  - Retrieve products filtered by saved filters
-  - Paginated results with previous/next page links
-  - Returns HTTP 404 if no products or filters are found
-- **⚡ Scalable & Extensible:**
-  - Asynchronous operations via FastAPI + Motor
-  - MongoDB used for flexible document storage
-  - Designed to handle growing data sets efficiently
-- **🐳 Containerized Deployment:**
-  - Fully dockerized with `docker-compose`
-  - Separate services for web and database
-  - Persistent MongoDB storage via Docker volumes
+This project is an example that demonstrates how to create a product search API using FastAPI, 
+Beanie ODM, and MongoDB. Every part of this project is sample code which shows how to do the 
+following:
+
+- **Define flexible filters with nested logical operators (AND/OR)**
+- **Store and manage filters in MongoDB with Beanie ODM**
+- **Create and query products using dynamic filter conditions**
+- **Write tests for filters, products, and product search endpoints**
+- **Support pagination for search results**
 
 ## Installation and Setup
 To get started with the Product Catalog API Service, follow these steps:
