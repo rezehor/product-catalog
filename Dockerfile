@@ -1,13 +1,12 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+COPY pyproject.toml uv.lock ./
 
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+RUN uv sync --frozen
 
 COPY . .

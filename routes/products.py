@@ -17,8 +17,7 @@ async def get_product_or_404(product_id: PydanticObjectId) -> Product:
     product = await Product.get(product_id)
     if not product:
         raise HTTPException(
-            status_code=404,
-            detail="Product with the given ID was not found."
+            status_code=404, detail="Product with the given ID was not found."
         )
     return product
 
@@ -28,16 +27,14 @@ async def get_product_or_404(product_id: PydanticObjectId) -> Product:
     response_model=ProductListResponseSchema,
     summary="Retrieve a paginated list of products",
     description=(
-            "Returns a paginated list of all products in the system. "
-            "Supports page number and page size via query parameters. "
-            "If no products are found, returns HTTP 404 Not Found."
+        "Returns a paginated list of all products in the system. "
+        "Supports page number and page size via query parameters. "
+        "If no products are found, returns HTTP 404 Not Found."
     ),
 )
 async def get_all_products(
     page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(
-        10, ge=1, le=20, description="Number of products per page"
-    )
+    per_page: int = Query(10, ge=1, le=20, description="Number of products per page"),
 ) -> ProductListResponseSchema:
 
     skip = (page - 1) * per_page
@@ -55,12 +52,10 @@ async def get_all_products(
 
     response = ProductListResponseSchema(
         products=[
-            ProductResponseSchema(**product.model_dump())
-            for product in products
+            ProductResponseSchema(**product.model_dump()) for product in products
         ],
         prev_page=(
-            f"/products/?page={page - 1}&per_page={per_page}"
-            if page > 1 else None
+            f"/products/?page={page - 1}&per_page={per_page}" if page > 1 else None
         ),
         next_page=(
             f"/products/?page={page + 1}&per_page={per_page}"
@@ -78,9 +73,9 @@ async def get_all_products(
     response_model=ProductResponseSchema,
     summary="Retrieve a single product by ID",
     description=(
-            "Fetches detailed information about a "
-            "single product identified by its ID. "
-            "If the product does not exist, returns HTTP 404 Not Found."
+        "Fetches detailed information about a "
+        "single product identified by its ID. "
+        "If the product does not exist, returns HTTP 404 Not Found."
     ),
 )
 async def get_product(product_id: PydanticObjectId) -> ProductResponseSchema:
@@ -94,13 +89,13 @@ async def get_product(product_id: PydanticObjectId) -> ProductResponseSchema:
     status_code=status.HTTP_201_CREATED,
     summary="Create a new product",
     description=(
-            "Creates a new product in the system. "
-            "If a product with the same name already exists, "
-            "returns HTTP 409 Conflict."
+        "Creates a new product in the system. "
+        "If a product with the same name already exists, "
+        "returns HTTP 409 Conflict."
     ),
 )
 async def create_product(
-        product_data: ProductListCreateSchema
+    product_data: ProductListCreateSchema,
 ) -> List[ProductResponseSchema]:
     names = [product.name for product in product_data.products]
 
@@ -109,7 +104,7 @@ async def create_product(
         existing_names = [product.name for product in existing]
         raise HTTPException(
             status_code=409,
-            detail=f"Product with the name {existing_names} already exists."
+            detail=f"Product with the name {existing_names} already exists.",
         )
 
     product_dicts = [product.model_dump() for product in product_data.products]
@@ -118,9 +113,7 @@ async def create_product(
 
     await Product.insert_many(products)
 
-    return [
-        ProductResponseSchema(**product.model_dump()) for product in products
-    ]
+    return [ProductResponseSchema(**product.model_dump()) for product in products]
 
 
 @router.patch(
@@ -129,14 +122,13 @@ async def create_product(
     status_code=status.HTTP_200_OK,
     summary="Update an existing product",
     description=(
-            "Updates an existing product. Only fields "
-            "provided in the request will be updated. "
-            "If no valid fields are supplied, returns HTTP 400 Bad Request."
+        "Updates an existing product. Only fields "
+        "provided in the request will be updated. "
+        "If no valid fields are supplied, returns HTTP 400 Bad Request."
     ),
 )
 async def update_product(
-    product_id: PydanticObjectId,
-    update_data: ProductUpdateSchema
+    product_id: PydanticObjectId, update_data: ProductUpdateSchema
 ) -> ProductResponseSchema:
     product = await get_product_or_404(product_id)
     updates = update_data.model_dump(exclude_unset=True)
@@ -153,14 +145,11 @@ async def update_product(
                     detail=(
                         f"Field '{key}' must be of type "
                         f"{type(current_value).__name__}"
-                    )
+                    ),
                 )
 
     if not safe_updates:
-        raise HTTPException(
-            status_code=400,
-            detail="No valid fields to update."
-        )
+        raise HTTPException(status_code=400, detail="No valid fields to update.")
 
     await product.update({"$set": safe_updates})
     return ProductResponseSchema(**product.model_dump())
@@ -171,9 +160,9 @@ async def update_product(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a product",
     description=(
-            "Deletes a product identified by its ID from the system. "
-            "Returns HTTP 204 No Content if deletion succeeds, "
-            "or HTTP 404 Not Found if the product does not exist."
+        "Deletes a product identified by its ID from the system. "
+        "Returns HTTP 204 No Content if deletion succeeds, "
+        "or HTTP 404 Not Found if the product does not exist."
     ),
 )
 async def delete_product(product_id: PydanticObjectId) -> None:
